@@ -12,7 +12,7 @@ import (
 
 func main() {
 
-	content, err := os.ReadFile("day4-1.txt")
+	content, err := os.ReadFile("day4-2.txt")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -24,14 +24,14 @@ func main() {
 		panic(err)
 	}
 
+	result := scratch.sumCardsWin()
 
-	fmt.Println(scratch.toString())
-	fmt.Println(scratch.sumPoints())
+	fmt.Println(result)
 }
 
 type Card struct {
+	id int
 	result string
-	cardId int
 	winningNumbers []int
 	points int
 }
@@ -48,19 +48,15 @@ func NewScratchRandomDraw(result string) (*ScratchRandomDraw, error) {
 		return nil, searchWinningError
 	}
 
-	calculatePointsError := scratchRandomDraw.calculatePoints()
-	if (calculatePointsError != nil) {
-		return nil, calculatePointsError
-	}
-
 	return scratchRandomDraw, nil
 }
 type ScratchRandomDraw struct {
-	cards []Card
+	cards map[int]Card
+	cardStack []Card
 }
 func (s *ScratchRandomDraw) loadResult(result string) error {
 	lines := strings.Split(result, "\n")
-	s.cards = []Card{}
+	s.cards = map[int]Card{}
 
 	for _, cardRow := range lines {
 		r := regexp.MustCompile(`Card\s+([\d]+):(.+)`)
@@ -75,11 +71,11 @@ func (s *ScratchRandomDraw) loadResult(result string) error {
 			return errors.New(fmt.Sprintf("Unable to parse card id %s from %v", extract[1], extract))
 		}
 
-		s.cards = append(s.cards, Card{
+		s.cards[cardId] = Card{
+			id: cardId,
 			result: extract[2],
-			cardId: cardId,
 			winningNumbers: []int{},
-		})
+		}
 	}
 	return nil
 }
@@ -102,44 +98,67 @@ func (s *ScratchRandomDraw) searchWinningNumbersForEachCard() error {
 				if (err != nil) {
 					return errors.New(fmt.Sprintf("Unable to parse number %s", resultNumber))
 				}
-				s.cards[index].winningNumbers = append(s.cards[index].winningNumbers, numberParsed)
+				card, ok := s.cards[index]
+				if ok {
+					card.winningNumbers = append(card.winningNumbers, numberParsed)
+					s.cards[index] = card
+				}
 			}
 		}
 	}
 	return nil
+}
+func (s *ScratchRandomDraw) sumCardsWin() int {
+	for _, card := range s.cards {
+		s.cardStack = append(s.cardStack, card)
+   }
+
+   for index:= 0; index < len(s.cardStack); index++ {
+		card := s.cardStack[index];
+		if (len(card.winningNumbers) > 0) {
+			for j := card.id + 1; j < (card.id + 1) + len(card.winningNumbers); j++ {
+				s.cardStack = append(s.cardStack, s.cards[j])
+			}
+		}
+   }
+
+   return len(s.cardStack)
 }
 func (s *ScratchRandomDraw) toString() string {
 	output := "[\n"
 	for _, card := range s.cards {
-		output += "{\n result:" + card.result + "\n cardId:" + strconv.Itoa(card.cardId) + "\n winningNumbers:" + fmt.Sprint(card.winningNumbers) + "\n points: " + strconv.Itoa(card.points) + "\n}\n"
+		output += "{\n result:" + card.result  + "\n winningNumbers:" + fmt.Sprint(card.winningNumbers) +  "\n}\n"
 	}
 	output += "]"
 	return output
-}
-func (s *ScratchRandomDraw) calculatePoints() error {
-	for index, card := range s.cards {
-		if len(card.winningNumbers) > 0 {
-			binaryString := "1" + strings.Repeat("0", len(card.winningNumbers) - 1)
-
-			if i, err := strconv.ParseInt(binaryString, 2, 64); err == nil {
-				s.cards[index].points = int(i)
-			} else {
-				return errors.New(fmt.Sprint("Unable to calculate point for %s", card.cardId))
-			}
-		}
-	}
-
-	return nil
-}
-func (s *ScratchRandomDraw) sumPoints() int {
-	sum := 0
-	for _, card := range s.cards {
-		sum += card.points
-	}
-	return sum
 }
 
 func isStringANumber(s string) bool {
 	_, err := strconv.Atoi(s)
 	return err == nil
 }
+
+// Old functions for part1 
+
+// func (s *ScratchRandomDraw) calculatePoints() error {
+// 	for index, card := range s.cards {
+// 		if len(card.winningNumbers) > 0 {
+// 			binaryString := "1" + strings.Repeat("0", len(card.winningNumbers) - 1)
+
+// 			if i, err := strconv.ParseInt(binaryString, 2, 64); err == nil {
+// 				s.cards[index].points = int(i)
+// 			} else {
+// 				return errors.New(fmt.Sprint("Unable to calculate point for %s", card.cardId))
+// 			}
+// 		}
+// 	}
+
+// 	return nil
+// }
+// func (s *ScratchRandomDraw) sumPoints() int {
+// 	sum := 0
+// 	for _, card := range s.cards {
+// 		sum += card.points
+// 	}
+// 	return sum
+// }
