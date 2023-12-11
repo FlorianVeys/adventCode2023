@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	seeds := []int{2906422699,6916147,3075226163,146720986,689152391,244427042,279234546,382175449,1105311711,2036236,3650753915,127044950,3994686181,93904335,1450749684,123906789,2044765513,620379445,1609835129,60050954}
+	seedKeyValuePair := []int{2906422699,6916147,3075226163,146720986,689152391,244427042,279234546,382175449,1105311711,2036236,3650753915,127044950,3994686181,93904335,1450749684,123906789,2044765513,620379445,1609835129,60050954}
 	input, ok := FetchInput("day5-1.txt")
 	if !ok {
 		panic(errors.New("Unable to fetch input file"))
@@ -19,12 +19,13 @@ func main() {
 	}
 
 	lowestLocation := int(^uint(0) >> 1)
-	for _, seed := range seeds {
+	ProcessSeeds(seedKeyValuePair, func(seed int) {
 		result := game.GetCorrespondingAlmanachValue(seed)
 		if result < lowestLocation {
 			lowestLocation = result
 		}
-	}
+	})
+
 	println(lowestLocation)
 }
 
@@ -131,4 +132,25 @@ func (game *Game) GetCorrespondingAlmanachValue(source int) int {
 		}
 	}
 	return value
+}
+
+// PURE POWER ! NO BRAINS
+func ProcessSeeds(keyValuePairs []int, handler func (int)) []int {
+	seeds := make([]int, 0)
+	keyValue := make([]int, 0)
+
+	for _, value := range keyValuePairs {
+		keyValue = append(keyValue, value)
+
+		if len(keyValue) == 2 {
+			for i := keyValue[0]; i < keyValue[0] + keyValue[1]; i++ {
+				handler(i)
+			}
+
+			keyValue = make([]int, 0)
+		}
+
+	}
+
+	return seeds
 }

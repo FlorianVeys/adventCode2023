@@ -233,3 +233,29 @@ func TestGameGetCorrespondingAlmanachValue(t *testing.T) {
 		}
 	}
 }
+
+func TestSeedList(t *testing.T) {
+	input := []int{ 0, 3 }
+	expect := []int {0, 1, 2}
+
+	result := GenerateSeedsList(input)
+
+	for i := 0; i < len(result); i++ {
+		if result[i] != expect[i] {
+			t.Errorf("Expected %v, got %v", expect[i], result[i])
+		}
+	}
+}
+
+func TestSeedList2(t *testing.T) {
+	input := []int{ 79, 14, 55, 13 }
+	expect := []int {79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67}
+
+	result := GenerateSeedsList(input)
+
+	for i := 0; i < len(result); i++ {
+		if result[i] != expect[i] {
+			t.Errorf("Expected %v, got %v", expect[i], result[i])
+		}
+	}
+}
